@@ -42,15 +42,38 @@ function App() {
   };
 
   const analyzeDocument = async () => {
-    const text = "Patient blood report: Hemoglobin low, WBC normal, RBC count below average.";
-    const response = await fetch("http://localhost:5000/analyze", {
-      method: "POST",
-      body: JSON.stringify({ text }),
-      headers: { "Content-Type": "application/json" },
-    });
+    if (!ipfsHash) {
+      alert("Please upload a document to IPFS first.");
+      return;
+    }
 
-    const data = await response.json();
-    setSummary(data.summary);
+    try {
+      // 1. Fetch the document content from IPFS via the Pinata gateway
+      // Note: This assumes the uploaded file is text-based. For PDFs or images,
+      // a text extraction step (OCR) would be needed on the backend.
+      const fileRes = await axios.get(`https://gateway.pinata.cloud/ipfs/${ipfsHash}`);
+      const textToAnalyze = typeof fileRes.data === 'object' ? JSON.stringify(fileRes.data) : fileRes.data.toString();
+
+      if (!textToAnalyze) {
+        alert("Could not read content from the uploaded file.");
+        return;
+      }
+
+      // 2. Send the actual file content to your analysis server
+      // Note: The frontend calls port 5000, while your MCP server is on 3001.
+      // This assumes a separate analysis server is running on 5000 for now.
+      const analysisRes = await fetch("http://localhost:5000/analyze", {
+        method: "POST",
+        body: JSON.stringify({ text: textToAnalyze }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await analysisRes.json();
+      setSummary(data.summary);
+    } catch (err) {
+      console.error("Analysis failed:", err);
+      alert("Failed to analyze the document.");
+    }
   };
 
   return (
