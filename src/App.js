@@ -1,15 +1,17 @@
 // src/App.js
 import React, { useState } from "react";
-import axios from "axios";
 
 function App() {
   const [address, setAddress] = useState(null);
   const [file, setFile] = useState(null);
   const [summary, setSummary] = useState("");
   const [ipfsHash, setIpfsHash] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const connectWallet = async () => {
     if (!window.ethereum) {
+      // Note: For Coinbase Wallet, you might need to import and use a library
+      // like '@coinbase/wallet-sdk' instead of relying on window.coinbaseWalletSDK
       alert("Install Coinbase Wallet");
       return;
     }
@@ -26,18 +28,17 @@ function App() {
     formData.append("file", file);
 
     try {
-      const res = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS",  formData, {
-        headers: {
-          pinata_api_key: process.env.REACT_APP_PINATA_KEY,
-          pinata_secret_api_key: process.env.REACT_APP_PINATA_SECRET,
-          "Content-Type": "multipart/form-data",
-        },
+      // The backend now handles the IPFS upload securely
+      const res = await fetch("http://localhost:5000/upload", {
+        method: "POST",
+        body: formData,
       });
-      setIpfsHash(res.data.IpfsHash);
+      const data = await res.json();
+      setIpfsHash(data.ipfsHash);
       alert("Document uploaded to IPFS!");
     } catch (err) {
       console.error(err);
-      alert("Upload failed.");
+      alert("Upload failed. Check the console for details.");
     }
   };
 
@@ -46,39 +47,36 @@ function App() {
       alert("Please upload a document to IPFS first.");
       return;
     }
+    setIsAnalyzing(true);
+    setSummary("");
 
     try {
-      // 1. Fetch the document content from IPFS via the Pinata gateway
-      // Note: This assumes the uploaded file is text-based. For PDFs or images,
-      // a text extraction step (OCR) would be needed on the backend.
-      const fileRes = await axios.get(`https://gateway.pinata.cloud/ipfs/${ipfsHash}`);
-      const textToAnalyze = typeof fileRes.data === 'object' ? JSON.stringify(fileRes.data) : fileRes.data.toString();
-
-      if (!textToAnalyze) {
-        alert("Could not read content from the uploaded file.");
-        return;
-      }
-
-      // 2. Send the actual file content to your analysis server
-      // Note: The frontend calls port 5000, while your MCP server is on 3001.
-      // This assumes a separate analysis server is running on 5000 for now.
+      // The backend now handles fetching from IPFS and analysis
       const analysisRes = await fetch("http://localhost:5000/analyze", {
         method: "POST",
-        body: JSON.stringify({ text: textToAnalyze }),
+        body: JSON.stringify({ ipfsHash }),
         headers: { "Content-Type": "application/json" },
       });
+
+      if (!analysisRes.ok) {
+        const errorData = await analysisRes.json();
+        throw new Error(errorData.error || "Analysis request failed");
+      }
 
       const data = await analysisRes.json();
       setSummary(data.summary);
     } catch (err) {
       console.error("Analysis failed:", err);
-      alert("Failed to analyze the document.");
+      alert(`Failed to analyze the document: ${err.message}`);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold mb-4">🩺 MedLoop</h1>
+    <div className="min-h-screen bg-gray-100 p-6 text-center">
+      <h1 className="text-4xl font-bold mb-4">🩺 MedLoop</h1>
+      <p className="mb-6 text-gray-600">Your AI-Powered Medical Document Analyzer</p>
       {!address ? (
         <button onClick={connectWallet} className="bg-blue-500 text-white px-4 py-2 rounded">
           Connect Wallet
@@ -87,29 +85,36 @@ function App() {
         <p>Connected: {address.slice(0, 6)}...{address.slice(-4)}</p>
       )}
 
-      <div className="mt-6">
-        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-        <button onClick={uploadToIPFS} className="ml-2 bg-green-500 text-white px-4 py-2 rounded">
-          Upload Document
-        </button>
-      </div>
-
-      {ipfsHash && (
-        <p className="mt-2 text-sm text-gray-600">
-          IPFS Hash: <a href={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}  target="_blank" rel="noopener noreferrer">{ipfsHash}</a>
-        </p>
-      )}
-
-      <button onClick={analyzeDocument} className="mt-4 bg-purple-500 text-white px-4 py-2 rounded">
-        Analyze Report
-      </button>
-
-      {summary && (
-        <div className="mt-4 p-4 bg-white shadow rounded">
-          <h2 className="font-semibold">Agent Summary:</h2>
-          <p>{summary}</p>
+      <div className="max-w-2xl mx-auto">
+        <div className="mt-6 p-4 bg-white shadow-md rounded-lg">
+          <h2 className="text-xl font-semibold mb-2">Step 1: Upload Report</h2>
+          <input type="file" onChange={(e) => setFile(e.target.files[0])} className="mb-2"/>
+          <button onClick={uploadToIPFS} disabled={!file} className="ml-2 bg-green-500 text-white px-4 py-2 rounded disabled:bg-gray-400">
+            Upload Document
+          </button>
+          {ipfsHash && (
+            <p className="mt-2 text-sm text-gray-600">
+              ✅ Uploaded to IPFS: <a href={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}  target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{ipfsHash.slice(0,15)}...</a>
+            </p>
+          )}
         </div>
-      )}
+
+        <div className="mt-4 p-4 bg-white shadow-md rounded-lg">
+          <h2 className="text-xl font-semibold mb-2">Step 2: Analyze</h2>
+          <button onClick={analyzeDocument} disabled={!ipfsHash || isAnalyzing} className="bg-purple-500 text-white px-4 py-2 rounded disabled:bg-gray-400">
+            {isAnalyzing ? "Analyzing..." : "Analyze Report"}
+          </button>
+        </div>
+
+        {isAnalyzing && <p className="mt-4 text-gray-700">Please wait, the agent is reading your document...</p>}
+
+        {summary && !isAnalyzing && (
+          <div className="mt-6 p-6 bg-white shadow-md rounded-lg text-left">
+            <h2 className="text-2xl font-bold mb-3">Agent Summary:</h2>
+            <pre className="whitespace-pre-wrap font-sans bg-gray-50 p-4 rounded">{summary}</pre>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

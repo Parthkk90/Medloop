@@ -1,31 +1,42 @@
 // backend/agents/medAgent.js
-const { createAgent } = require("agentkit");
+const OpenAI = require("openai");
 
-const medAgent = createAgent({
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const medAgent = {
   id: "medloop-agent",
   actions: [
     {
       id: "summarize-doc",
       description: "Summarize uploaded medical report",
       handler: async ({ input }) => {
-        // Improved: Use input text and provide a more dynamic summary
         const text = input?.text || "";
-        let summary = "Diagnosis Summary:\n";
-        if (text.toLowerCase().includes("hemoglobin")) {
-          summary += "- Low hemoglobin levels indicate possible anemia.\n";
+        if (!text) {
+          return "No text provided to summarize.";
         }
-        if (text.toLowerCase().includes("wbc")) {
-          summary += "- No signs of infection based on WBC count.\n";
+
+        try {
+          const completion = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a helpful medical assistant. Summarize the following medical document, focusing on key diagnoses, metrics, and recommended actions. Present it in a clear, structured format.",
+              },
+              { role: "user", content: text },
+            ],
+          });
+          return completion.choices[0].message.content;
+        } catch (error) {
+          console.error("OpenAI API Error:", error);
+          throw new Error("Failed to generate summary from OpenAI.");
         }
-        if (text.length < 50) {
-          summary += "- Report is brief. Please provide more details for a thorough summary.\n";
-        } else {
-          summary += "- Suggest iron supplements and recheck in 3 weeks.\n";
-        }
-        return summary;
       },
     },
   ],
-});
+};
 
 module.exports = medAgent;
