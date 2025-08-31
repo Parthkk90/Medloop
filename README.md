@@ -1,70 +1,85 @@
-# Getting Started with Create React App
+# MedLoop
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+MedLoop is an AI-powered medical report analyzer. Users can upload or paste medical reports, receive instant summaries, emergency detection, and suggestions for nearby hospitals.
 
-## Available Scripts
+## ✨ Features
 
-In the project directory, you can run:
+- Upload or paste medical reports
+- AI-generated summaries
+- Emergency detection and response
+- Find nearby hospitals using geolocation
+- Modern React frontend with Lucide icons and gradient background
 
-### `npm start`
+## 🛠️ Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Frontend:** React, Tailwind CSS, Lucide Icons
+- **Backend:** Node.js, Express, OpenAI API
+- **Database:** (see below)
+- **Geolocation & Hospital Search:** OpenStreetMap Nominatim API
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🚀 Getting Started
 
-### `npm test`
+### 1. Install dependencies
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+```
 
-### `npm run build`
+### 2. Start the backend
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+cd backend
+npm install
+npm start
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 3. Start the frontend
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+cd ..
+npm start
+```
 
-### `npm run eject`
+### 4. Use the app
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🗄️ Database
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+MedLoop currently does **not** use a database for storing reports or user data.  
+If you want to persist user accounts, reports, or logs, you can use **MongoDB**.
 
-## Learn More
+### How to add MongoDB:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. Install MongoDB and the `mongoose` package:
+   ```bash
+   npm install mongoose
+   ```
+2. Connect to MongoDB in your backend (`backend/server.js`):
+   ```js
+   const mongoose = require('mongoose');
+   mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+   ```
+3. Add models for users, reports, etc.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+**Alternative:**  
+You can also use PostgreSQL, MySQL, or any other database, but MongoDB is easiest for Node.js/Express.
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 📦 Environment Variables
 
-### Analyzing the Bundle Size
+- Add your OpenAI API key and MongoDB URI to `backend/.env`:
+  ```
+  OPENAI_API_KEY=your_openai_api_key
+  MONGO_URI=mongodb://localhost:27017/medloop
+  ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## 📝 Notes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- For demo/testing, all analysis is done in-memory.
+- To store reports or user data, integrate a database as described above.
