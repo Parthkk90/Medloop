@@ -48,8 +48,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🗄️ Database
 
-MedLoop currently does **not** use a database for storing reports or user data.  
-If you want to persist user accounts, reports, or logs, you can use **MongoDB**.
+MedLoop uses **MongoDB** to store medical reports and user data.
 
 ### How to add MongoDB:
 
@@ -62,10 +61,9 @@ If you want to persist user accounts, reports, or logs, you can use **MongoDB**.
    const mongoose = require('mongoose');
    mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
    ```
-3. Add models for users, reports, etc.
+3. Create models for reports and users in `backend/models/`.
 
-**Alternative:**  
-You can also use PostgreSQL, MySQL, or any other database, but MongoDB is easiest for Node.js/Express.
+4. Update your analysis route to save analyzed reports to the database.
 
 ---
 

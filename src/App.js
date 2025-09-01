@@ -35,7 +35,7 @@ function App() {
         const fileContent = await file.text();
         inputText = fileContent;
       }
-      const res = await fetch("http://localhost:5000/analyze", {
+      const res = await fetch("http://localhost:3001/api/analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: inputText }),
@@ -45,7 +45,7 @@ function App() {
         throw new Error(errData.error || "Analysis failed");
       }
       const data = await res.json();
-      setSummary(data.summary);
+      setSummary(data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -89,7 +89,7 @@ function App() {
     <div className="min-h-screen gradient-bg flex flex-col items-center justify-center px-4">
       <div className="bg-white bg-opacity-90 rounded-xl shadow-lg p-8 max-w-lg w-full">
         <div className="flex items-center justify-center mb-4">
-          <FileText size={32} className="text-blue-600 mr-2" />
+          <FileText size={32} className="text-blue-400 mr-2" />
           <h1 className="text-3xl font-bold text-gray-800">MedLoop</h1>
         </div>
         <p className="text-gray-500 mb-6 text-center">
@@ -103,7 +103,7 @@ function App() {
         />
         <div className="relative mb-3">
           <textarea
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-700 text-white placeholder-gray-400"
             rows={5}
             placeholder="Or paste your medical report text here..."
             value={text}
