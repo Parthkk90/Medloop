@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FileText, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import "./index.css";
+import detectEthereumProvider from '@metamask/detect-provider';
 
 function App() {
   const [file, setFile] = useState(null);
@@ -10,6 +11,7 @@ function App() {
   const [error, setError] = useState("");
   const [location, setLocation] = useState(null);
   const [hospitals, setHospitals] = useState([]);
+  const [wallet, setWallet] = useState("");
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -38,7 +40,7 @@ function App() {
       const res = await fetch("http://localhost:3001/api/analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: inputText }),
+        body: JSON.stringify({ text: inputText, wallet }),
       });
       if (!res.ok) {
         const errData = await res.json();
@@ -82,6 +84,16 @@ function App() {
       if (data.length === 0) setError("No hospitals found nearby.");
     } catch {
       setError("Failed to fetch hospitals.");
+    }
+  };
+
+  const connectWallet = async () => {
+    const provider = await detectEthereumProvider();
+    if (provider) {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      setWallet(accounts[0]);
+    } else {
+      alert('Please install MetaMask!');
     }
   };
 
@@ -190,6 +202,19 @@ function App() {
         <p className="mt-6 text-xs text-gray-500 text-center">
           <strong>Disclaimer:</strong> MedLoop provides AI-generated summaries and emergency detection for informational purposes only. Always consult a healthcare professional for medical advice or emergencies.
         </p>
+        <div className="mt-4">
+          <button
+            onClick={connectWallet}
+            className="flex items-center justify-center px-4 py-2 rounded-lg font-semibold bg-purple-600 text-white hover:bg-purple-700 transition"
+          >
+            Connect Wallet
+          </button>
+          {wallet && (
+            <div className="mt-2 text-center text-gray-700">
+              Connected as: <strong>{wallet}</strong>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ const medAgent = {
         const text = input?.text || "";
         if (!text) return { summary: "No text provided.", emergency: false };
 
-        // Simple emergency detection (expand as needed)
+        // Emergency detection
         const emergencies = [
           { keyword: "heart attack", message: "Possible heart attack detected!" },
           { keyword: "stroke", message: "Possible stroke detected!" },
@@ -32,7 +32,6 @@ const medAgent = {
           }
         }
 
-        // Demo summary
         let summary = `Summary: ${text.slice(0, 100)}...`;
         if (emergency) summary += `\n\n⚠️ EMERGENCY: ${emergencyMsg}`;
 

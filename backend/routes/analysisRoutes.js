@@ -3,15 +3,17 @@ const router = express.Router();
 const medAgent = require("../agents/mediAgent");
 const Report = require("../models/Report");
 
+// POST /api/analysis
 router.post("/", async (req, res) => {
-  const { text } = req.body;
-  if (!text) {
-    return res.status(400).json({ error: "Text is required for analysis." });
+  const { text, wallet } = req.body;
+  if (!text || !wallet) {
+    return res.status(400).json({ error: "Text and wallet address are required." });
   }
   try {
     const result = await medAgent.runAction("summarize-doc", { input: { text } });
     // Save to MongoDB
     const report = new Report({
+      wallet,
       text,
       summary: result.summary,
       emergency: result.emergency,
@@ -22,6 +24,16 @@ router.post("/", async (req, res) => {
   } catch (error) {
     console.error("Analysis error:", error);
     res.status(500).json({ error: "Failed to analyze document." });
+  }
+});
+
+// GET /api/analysis/:wallet
+router.get("/:wallet", async (req, res) => {
+  try {
+    const reports = await Report.find({ wallet: req.params.wallet }).sort({ createdAt: -1 });
+    res.json(reports);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch reports." });
   }
 });
 

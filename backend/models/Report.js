@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const reportSchema = new mongoose.Schema({
+  wallet: String,
   text: String,
   summary: String,
   emergency: Boolean,
