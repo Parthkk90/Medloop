@@ -5,21 +5,33 @@ const Report = require("../models/Report");
 
 // POST /api/analysis
 router.post("/", async (req, res) => {
-  const { text, wallet } = req.body;
-  if (!text || !wallet) {
-    return res.status(400).json({ error: "Text and wallet address are required." });
-  }
   try {
+    const { text, wallet } = req.body;
+    if (!text || !wallet) {
+      return res.status(400).json({ error: "Text and wallet address are required." });
+    }
+
     const result = await medAgent.runAction("summarize-doc", { input: { text } });
-    // Save to MongoDB
+
+    if (!result || !result.summary) {
+      console.error("MedAgent analysis failed or returned incomplete data:", result);
+      return res.status(500).json({ error: "Failed to analyze document due to agent error." });
+    }
+
     const report = new Report({
       wallet,
       text,
       summary: result.summary,
       emergency: result.emergency,
       emergencyMsg: result.emergencyMsg
+    });    
+
+    await report.save()
+    .catch(err => {
+      console.error("Error saving report:", err);
+      return res.status(500).json({ error: "Failed to save the analysis report." });
     });
-    await report.save();
+
     res.json(result);
   } catch (error) {
     console.error("Analysis error:", error);
@@ -31,9 +43,10 @@ router.post("/", async (req, res) => {
 router.get("/:wallet", async (req, res) => {
   try {
     const reports = await Report.find({ wallet: req.params.wallet }).sort({ createdAt: -1 });
+
     res.json(reports);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch reports." });
+    return res.status(500).json({ error: "Failed to fetch reports." });
   }
 });
 

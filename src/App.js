@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { FileText, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState, useRef } from "react";
+import { FileText, Loader2, CheckCircle2, AlertCircle, UploadCloud } from "lucide-react";
 import "./index.css";
-import detectEthereumProvider from '@metamask/detect-provider';
+import "./App.css"; // Ensure both CSS files are imported
 
 function App() {
   const [file, setFile] = useState(null);
@@ -9,9 +9,7 @@ function App() {
   const [summary, setSummary] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState("");
-  const [location, setLocation] = useState(null);
-  const [hospitals, setHospitals] = useState([]);
-  const [wallet, setWallet] = useState("");
+  const fileInputRef = useRef();
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -27,6 +25,20 @@ function App() {
     setError("");
   };
 
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
+      setText("");
+      setSummary("");
+      setError("");
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
   const analyze = async () => {
     setIsAnalyzing(true);
     setSummary("");
@@ -40,7 +52,7 @@ function App() {
       const res = await fetch("http://localhost:3001/api/analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: inputText, wallet }),
+        body: JSON.stringify({ text: inputText }),
       });
       if (!res.ok) {
         const errData = await res.json();
@@ -62,76 +74,57 @@ function App() {
     setError("");
   };
 
-  const getLocation = () => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setError("Unable to retrieve your location.")
-    );
-  };
-
-  const findHospitals = async () => {
-    if (!location) return;
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=hospital&limit=5&viewbox=${location.lng-0.1},${location.lat+0.1},${location.lng+0.1},${location.lat-0.1}`
-      );
-      const data = await res.json();
-      setHospitals(data);
-      if (data.length === 0) setError("No hospitals found nearby.");
-    } catch {
-      setError("Failed to fetch hospitals.");
-    }
-  };
-
-  const connectWallet = async () => {
-    const provider = await detectEthereumProvider();
-    if (provider) {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      setWallet(accounts[0]);
-    } else {
-      alert('Please install MetaMask!');
-    }
-  };
-
   return (
-    <div className="min-h-screen gradient-bg flex flex-col items-center justify-center px-4">
-      <div className="bg-white bg-opacity-90 rounded-xl shadow-lg p-8 max-w-lg w-full">
-        <div className="flex items-center justify-center mb-4">
-          <FileText size={32} className="text-blue-400 mr-2" />
-          <h1 className="text-3xl font-bold text-gray-800">MedLoop</h1>
+    <div className="min-h-screen flex items-center justify-center gradient-bg px-4 relative">
+      <div className="bg-icons">
+        <svg style={{ top: "10%", left: "5%", position: "absolute" }} width="48" height="48" fill="#fff" opacity="0.08">
+          <rect width="48" height="48" rx="12" />
+        </svg>
+        <svg style={{ top: "60%", left: "80%", position: "absolute" }} width="48" height="48" fill="#fff" opacity="0.08">
+          <circle cx="24" cy="24" r="20" />
+        </svg>
+      </div>
+      <div className="relative z-10 bg-white bg-opacity-95 rounded-3xl shadow-2xl p-12 max-w-xl w-full flex flex-col items-center card-animate">
+        <div className="flex items-center justify-center mb-6">
+          <FileText size={40} className="text-pink-500 mr-3" />
+          <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight">MedLoop</h1>
         </div>
-        <p className="text-gray-500 mb-6 text-center">
-          Securely Analyze Your Medical Reports
-        </p>
-        <input
-          type="file"
-          accept=".txt"
-          onChange={handleFileChange}
-          className="mb-3 block w-full"
-        />
-        <div className="relative mb-3">
-          <textarea
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-700 text-white placeholder-gray-400"
-            rows={5}
-            placeholder="Or paste your medical report text here..."
-            value={text}
-            onChange={handleTextChange}
-            disabled={!!file}
+        <p className="text-gray-600 mb-8 text-center text-lg font-medium">Securely Analyze Your Medical Reports</p>
+        <div
+          className="upload-area w-full mb-4 p-6 border-2 border-dashed border-pink-300 rounded-xl flex flex-col items-center justify-center cursor-pointer transition hover:border-pink-500 bg-pink-50"
+          onClick={() => fileInputRef.current.click()}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+        >
+          <UploadCloud size={32} className="text-pink-400 mb-2" />
+          <span className="text-pink-500 font-semibold">Drag & drop your .txt file here, or click to select</span>
+          <input
+            type="file"
+            accept=".txt"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            aria-label="Upload medical report file"
           />
+          {file && <span className="mt-2 text-gray-700">{file.name}</span>}
         </div>
-        <div className="flex gap-2 mb-4">
+        <textarea
+          className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-400 mb-4 bg-pink-50"
+          rows={7}
+          value={text}
+          onChange={handleTextChange}
+          aria-label="Paste medical report text here"
+        />
+        <div className="flex gap-4 mb-6 w-full">
           <button
             onClick={analyze}
             disabled={isAnalyzing || (!file && !text.trim())}
-            className={`flex items-center justify-center px-4 py-2 rounded-lg font-semibold text-white transition ${
+            className={`flex items-center justify-center px-6 py-3 rounded-lg font-semibold text-white transition w-1/2 ${
               isAnalyzing || (!file && !text.trim())
-                ? "bg-blue-300 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+                ? "bg-pink-300 cursor-not-allowed"
+                : "bg-pink-500 hover:bg-pink-600"
             }`}
+            aria-label="Analyze medical report"
           >
             {isAnalyzing ? (
               <>
@@ -146,75 +139,28 @@ function App() {
           <button
             onClick={reset}
             disabled={isAnalyzing}
-            className="flex items-center justify-center px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+            className="flex items-center justify-center px-6 py-3 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition w-1/2"
+            aria-label="Reset form"
           >
-            Reset
+            <AlertCircle className="mr-2" /> Reset
           </button>
         </div>
-        {summary && (
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h2 className="text-lg font-bold mb-2 flex items-center text-blue-700">
-              <CheckCircle2 className="mr-2" /> Summary
-            </h2>
-            <pre className="whitespace-pre-wrap font-sans text-gray-800">{summary.summary}</pre>
-            {summary.emergency && (
-              <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                <strong>⚠️ Emergency Detected!</strong> {summary.emergencyMsg}
-                <button
-                  onClick={() => {
-                    getLocation();
-                    setTimeout(findHospitals, 2000); // fetch hospitals after location
-                  }}
-                  className="ml-4 bg-red-600 text-white px-3 py-1 rounded"
-                  disabled={isAnalyzing}
-                >
-                  Find Nearest Hospitals
-                </button>
-                <a href="tel:911" className="ml-4 bg-yellow-500 text-white px-3 py-1 rounded">Call Emergency</a>
-              </div>
-            )}
-            {hospitals.length > 0 && (
-              <div className="mt-4">
-                <h3 className="font-bold mb-2">Nearby Hospitals:</h3>
-                <ul>
-                  {hospitals.map((h, i) => (
-                    <li key={i}>
-                      <a href={`https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lon}`} target="_blank" rel="noopener noreferrer">
-                        {h.display_name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {location && hospitals.length === 0 && (
-              <div className="mt-2 text-blue-600 flex items-center">
-                <Loader2 className="animate-spin mr-2" /> Searching for hospitals near you...
-              </div>
-            )}
-          </div>
-        )}
         {error && (
           <div className="flex items-center text-red-600 mb-4">
             <AlertCircle className="mr-2" /> {error}
           </div>
         )}
+        {summary && (
+          <div className="mt-4 p-4 bg-pink-50 border border-pink-200 rounded-lg w-full">
+            <h2 className="text-xl font-bold mb-2 flex items-center text-pink-700">
+              <CheckCircle2 className="mr-2" /> Summary
+            </h2>
+            <pre className="whitespace-pre-wrap font-sans text-gray-800">{summary?.summary}</pre>
+          </div>
+        )}
         <p className="mt-6 text-xs text-gray-500 text-center">
           <strong>Disclaimer:</strong> MedLoop provides AI-generated summaries and emergency detection for informational purposes only. Always consult a healthcare professional for medical advice or emergencies.
         </p>
-        <div className="mt-4">
-          <button
-            onClick={connectWallet}
-            className="flex items-center justify-center px-4 py-2 rounded-lg font-semibold bg-purple-600 text-white hover:bg-purple-700 transition"
-          >
-            Connect Wallet
-          </button>
-          {wallet && (
-            <div className="mt-2 text-center text-gray-700">
-              Connected as: <strong>{wallet}</strong>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

@@ -21,3 +21,30 @@
 main {
   padding: 20px;
 }
+
+button, .upload-area {
+  transition: box-shadow 0.2s, background 0.2s, color 0.2s;
+}
+button:hover {
+  box-shadow: 0 4px 16px rgba(220, 0, 120, 0.12);
+}
+.upload-area:hover {
+  background: #ffe4f7;
+  border-color: #ff69b4;
+}
+
+.gradient-bg {
+  background: linear-gradient(120deg, #fbc2eb 0%, #a6c1ee 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes floatCard {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+.card-animate {
+  animation: floatCard 3s ease-in-out infinite;
+}
