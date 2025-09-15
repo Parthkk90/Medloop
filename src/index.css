@@ -116,3 +116,23 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply min-h-screen bg-gradient-to-br from-[#1a1a40] to-[#23234f] text-white;
+  font-family: 'Inter', 'Space Mono', monospace, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+.bg-pixels {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image: url('/pixel-art.svg'); /* Create or download a pixel-art SVG */
+  background-repeat: repeat;
+}
