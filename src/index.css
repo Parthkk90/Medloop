@@ -122,7 +122,7 @@ body {
 @tailwind utilities;
 
 body {
-  @apply min-h-screen bg-gradient-to-br from-[#1a1a40] to-[#23234f] text-white;
+  @apply min-h-screen bg-gradient-to-br from-indigo-900 to-indigo-800 text-white;
   font-family: 'Inter', 'Space Mono', monospace, sans-serif;
   position: relative;
   overflow-x: hidden;
