@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import NavBar from "./NavBar";
-import { Heart, FileText, Loader2, CheckCircle2, AlertCircle, UploadCloud } from "lucide-react";
+import { Heart, Loader2, CheckCircle2, AlertCircle, UploadCloud } from "lucide-react";
 import "./index.css";
 import "./App.css"; // Ensure both CSS files are imported
 
@@ -19,12 +19,6 @@ function App() {
     setError("");
   };
 
-  const handleTextChange = (e) => {
-    setText(e.target.value);
-    setFile(null);
-    setSummary("");
-    setError("");
-  };
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -77,7 +71,7 @@ function App() {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#1a1a40] to-[#23234f]">
-      <div className="bg-pixels"></div>
+  <div className="bg-pixels" style={{ backgroundImage: "url('/pixel-art.svg')" }}></div>
       <NavBar />
       <main className="flex flex-col items-center justify-center w-full pt-32 z-10">
         <div className="bg-[#23234f] bg-opacity-95 rounded-2xl shadow-2xl p-12 max-w-xl w-full flex flex-col items-center border border-pink-400">
